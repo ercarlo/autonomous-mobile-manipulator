@@ -205,6 +205,10 @@ docs/
 
 ## Requirements
 
+For setup instructions, simulation launch commands and mission
+execution examples, see the
+[Installation and Usage Guide](docs/installation.md).
+
 - Ubuntu 24.04 LTS
 - ROS 2 Jazzy
 - Gazebo Harmonic

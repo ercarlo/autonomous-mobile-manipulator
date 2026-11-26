@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+  <!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR
+  ============================================================
+
+  Modelo: YCB Mustard Bottle
+  Archivo: model.sdf
+
+  Descripción:
+      Botella de mostaza utilizada para pruebas de
+      percepción RGB-D, segmentación YOLO y manipulación.
+
+  Modelo original:
+      YCB Object and Model Set - 006_mustard_bottle
+
+  Fuente:
+      AI Habitat / YCB Dataset
+      Licencia del dataset: CC BY 4.0
+
+  ============================================================
+  -->
+
+  <model name="ycb_mustard_bottle">
+
+    <!--
+    El modelo es dinámico para permitir su manipulación
+    y la interacción física con la mesa y la pinza.
+    -->
+    <static>false</static>
+
+    <link name="mustard_bottle_link">
+
+      <!-- ==================================================
+     PROPIEDADES FÍSICAS
+     ================================================== -->
+
+    <inertial>
+
+        <!--
+        Centro de masas aproximado.
+
+        Calculado a partir del centro de la caja envolvente
+        de la malla visual mediante Trimesh.
+
+        El origen del modelo no coincide con el centro
+        geométrico de la botella.
+
+        Este valor es una aproximación inicial que
+        validaremos mediante pruebas físicas.
+        -->
+        <pose>-0.01532 -0.02353 0.09247 0 0 0</pose>
+
+        <!-- Masa de la botella YCB -->
+        <mass>0.603</mass>
+
+        <!--
+        Tensor de inercia aproximado.
+
+        Se considera un prisma rectangular homogéneo
+        con las dimensiones obtenidas mediante Trimesh:
+
+            X = 0.097211 m
+            Y = 0.066681 m
+            Z = 0.191390 m
+
+        Los momentos de inercia se calculan respecto
+        al centro de masas aproximado.
+        -->
+        <inertia>
+
+            <ixx>0.002064</ixx>
+            <iyy>0.002316</iyy>
+            <izz>0.000698</izz>
+
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+
+        </inertia>
+
+    </inertial>
+
+
+      <!-- ==================================================
+           GEOMETRÍA VISUAL
+           ================================================== -->
+
+      <visual name="mustard_visual">
+
+        <!--
+        Inicialmente conservamos el origen y la
+        orientación de la malla original.
+
+        Comprobaremos su alineación en Gazebo.
+        -->
+
+        <pose>0 0 0 0 0 0</pose>
+
+        <geometry>
+          <mesh>
+
+            <!-- Malla visual con texturas -->
+            <uri>model://ycb_mustard_bottle/meshes/mustard_bottle.glb</uri>
+
+            <scale>1 1 1</scale>
+
+          </mesh>
+        </geometry>
+
+      </visual>
+
+
+        <!-- ==================================================
+            GEOMETRÍA DE COLISIÓN
+            ==================================================
+
+            Sustituimos la malla de colisión YCB por un
+            paralelepípedo para optimizar el rendimiento.
+
+            Dimensiones obtenidas mediante Trimesh:
+
+                X = 0.099477 m
+                Y = 0.068869 m
+                Z = 0.193202 m
+
+            La posición corresponde al centro de la caja
+            envolvente de la malla de colisión original.
+
+            Ventajas:
+            - Menor coste computacional.
+            - Contactos físicos más sencillos.
+            - Mayor estabilidad en Gazebo Harmonic.
+
+            Limitación:
+            - No reproduce exactamente la forma irregular
+                de la botella.
+        -->
+
+        <collision name="mustard_collision">
+
+            <!--
+            Centro de la geometría de colisión respecto
+            al origen de mustard_bottle_link.
+            -->
+            <pose>-0.0151565 -0.0233315 0.092491 0 0 0</pose>
+
+            <geometry>
+
+                <box>
+                    <size>0.099477 0.068869 0.193202</size>
+                </box>
+
+            </geometry>
+
+            <!-- ==================================================
+                PROPIEDADES DE CONTACTO
+                ================================================== -->
+
+            <surface>
+
+                <!--
+                Fricción aproximada entre la botella,
+                la mesa y los dedos de la pinza.
+                -->
+
+                <friction>
+                    <ode>
+                        <mu>0.9</mu>
+                        <mu2>0.9</mu2>
+                    </ode>
+                </friction>
+
+            </surface>
+
+        </collision>
+
+    </link>
+
+  </model>
+
+</sdf>

@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+  <!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR
+  ============================================================
+
+  Modelo: YCB Apple
+  Archivo: model.sdf
+
+  Descripción:
+      Manzana utilizada para pruebas de percepción RGB-D,
+      segmentación mediante YOLO y manipulación con MoveIt 2.
+
+  Modelo original:
+      YCB Object and Model Set - 013_apple
+
+  Fuente:
+      AI Habitat / YCB Dataset
+
+  ============================================================
+  -->
+
+  <model name="ycb_apple">
+
+    <!--
+    El objeto es dinámico para permitir:
+      - Interacción con la gravedad.
+      - Contactos físicos con la mesa.
+      - Rodadura sobre superficies.
+      - Manipulación mediante la pinza del UR5e.
+    -->
+    <static>false</static>
+
+    <link name="apple_link">
+
+      <!-- ==================================================
+           PROPIEDADES FÍSICAS
+           ================================================== -->
+
+      <inertial>
+
+        <!--
+        Centro de masas aproximado.
+
+        Obtenido a partir del centro de la caja envolvente
+        de la malla visual mediante Trimesh.
+
+        Centro geométrico:
+          X =  0.0008635 m
+          Y = -0.0037860 m
+          Z =  0.0355415 m
+
+        Se supone una distribución de masa aproximadamente
+        homogénea para las primeras pruebas.
+        -->
+
+        <pose>0.000864 -0.003786 0.035542 0 0 0</pose>
+
+        <!-- Masa de la manzana YCB: 68 gramos -->
+        <mass>0.068</mass>
+
+        <!--
+        Tensor de inercia aproximado mediante un elipsoide
+        homogéneo.
+
+        Dimensiones de la manzana:
+          X = 0.075419 m
+          Y = 0.074840 m
+          Z = 0.071907 m
+
+        Para un elipsoide homogéneo:
+
+          Ixx = m/5 * (b² + c²)
+          Iyy = m/5 * (a² + c²)
+          Izz = m/5 * (a² + b²)
+
+        Donde a, b y c son los semiejes.
+
+        Los valores están expresados en kg·m².
+        -->
+
+        <inertia>
+
+          <ixx>0.00003662</ixx>
+          <iyy>0.00003692</iyy>
+          <izz>0.00003838</izz>
+
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+
+        </inertia>
+
+      </inertial>
+
+
+      <!-- ==================================================
+           GEOMETRÍA VISUAL
+           ================================================== -->
+
+      <visual name="apple_visual">
+
+        <!--
+        Conservamos la posición y orientación originales
+        de la malla YCB.
+        -->
+
+        <pose>0 0 0 0 0 0</pose>
+
+        <geometry>
+
+          <mesh>
+
+            <!-- Malla visual con texturas -->
+            <uri>model://ycb_apple/meshes/apple.glb</uri>
+
+            <!-- Escala original en metros -->
+            <scale>1 1 1</scale>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+      <!-- ==================================================
+           GEOMETRÍA DE COLISIÓN
+           ================================================== -->
+
+            <!-- ==================================================
+            GEOMETRÍA DE COLISIÓN
+            ==================================================
+
+            Aproximamos la geometría de la manzana mediante
+            una esfera para reducir el coste computacional
+            de las colisiones en Gazebo Harmonic.
+
+            Dimensiones originales obtenidas con Trimesh:
+
+                X = 0.075419 m
+                Y = 0.074840 m
+                Z = 0.071907 m
+
+            Radio de la esfera:
+                R = 0.0375 m
+
+            La posición del centro se ha obtenido a partir
+            de la caja envolvente de la malla visual.
+
+            Esta aproximación permite:
+            - Contactos físicos sencillos.
+            - Menor coste computacional.
+            - Rodadura sobre superficies.
+            - Agarres mediante la pinza Robotiq.
+        -->
+
+        <collision name="apple_collision">
+
+            <!--
+            Centro geométrico aproximado de la manzana
+            respecto al origen de apple_link.
+            -->
+            <pose>0.000864 -0.003786 0.035542 0 0 0</pose>
+
+            <geometry>
+
+                <sphere>
+                    <radius>0.0375</radius>
+                </sphere>
+
+            </geometry>
+
+            <!-- ==================================================
+                PROPIEDADES DE CONTACTO
+                ================================================== -->
+
+            <surface>
+
+                <!--
+                Fricción inicial entre la manzana,
+                la mesa y los dedos de la pinza.
+                -->
+
+                <friction>
+
+                    <ode>
+                        <mu>0.9</mu>
+                        <mu2>0.9</mu2>
+                    </ode>
+
+                </friction>
+
+            </surface>
+
+        </collision>
+
+    </link>
+
+  </model>
+
+</sdf>

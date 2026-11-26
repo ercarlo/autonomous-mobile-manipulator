@@ -1,0 +1,302 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+  <!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR
+  ============================================================
+
+  Modelo: YCB Bowl
+  Archivo: model.sdf
+
+  Descripción:
+      Bol utilizado para pruebas de percepción RGB-D,
+      segmentación YOLO y manipulación con MoveIt 2.
+
+  Modelo original:
+      YCB Object and Model Set - 024_bowl
+
+  Fuente:
+      AI Habitat / YCB Dataset
+
+  Estrategia de simulación:
+      - Malla GLB original para visualización.
+      - Colisiones mediante primitivas geométricas.
+      - Base cilíndrica y ocho paredes inclinadas.
+      - Centro de masas aproximado.
+
+  ============================================================
+  -->
+
+  <model name="ycb_bowl">
+
+    <!-- El objeto es dinámico y puede ser manipulado. -->
+    <static>false</static>
+
+    <link name="bowl_link">
+
+      <!-- ==================================================
+           PROPIEDADES FÍSICAS
+           ================================================== -->
+
+      <inertial>
+
+        <!--
+        Centro de masas aproximado.
+
+        El centro de la caja envolvente se ha obtenido
+        mediante Trimesh.
+
+        Esta posición es provisional, ya que el centro
+        de masas real depende de la distribución del
+        material del recipiente.
+        -->
+
+        <pose>-0.014796 -0.043754 0.026989 0 0 0</pose>
+
+        <!-- Masa del bol YCB: 147 gramos -->
+        <mass>0.147</mass>
+
+        <!--
+        Aproximación del tensor de inercia mediante
+        un cilindro macizo equivalente.
+
+        Radio: 0.080546 m
+        Altura: 0.054966 m
+
+        Se utiliza esta aproximación para iniciar
+        las pruebas de estabilidad física.
+        -->
+
+        <inertia>
+
+          <ixx>0.00027543</ixx>
+          <iyy>0.00027543</iyy>
+          <izz>0.00047684</izz>
+
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+
+        </inertia>
+
+      </inertial>
+
+
+      <!-- ==================================================
+           GEOMETRÍA VISUAL
+           ================================================== -->
+
+      <visual name="bowl_visual">
+
+        <!--
+        Conservamos el origen y la orientación originales
+        del modelo YCB.
+        -->
+
+        <pose>0 0 0 0 0 0</pose>
+
+        <geometry>
+
+          <mesh>
+
+            <uri>model://ycb_bowl/meshes/bowl.glb</uri>
+
+            <scale>1 1 1</scale>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+      <!-- ==================================================
+           COLISIÓN: BASE INFERIOR
+           ================================================== -->
+
+      <collision name="bowl_base_collision">
+
+        <!--
+        Cilindro que aproxima la base del recipiente.
+
+        Su centro XY coincide aproximadamente con
+        el centro geométrico del bol.
+
+        La parte inferior queda cerca de Z = 0.
+        -->
+
+        <pose>-0.014796 -0.043754 0.0025 0 0 0</pose>
+
+        <geometry>
+
+          <cylinder>
+            <radius>0.052</radius>
+            <length>0.006</length>
+          </cylinder>
+
+        </geometry>
+
+        <surface>
+
+          <friction>
+            <ode>
+              <mu>0.9</mu>
+              <mu2>0.9</mu2>
+            </ode>
+          </friction>
+
+        </surface>
+
+      </collision>
+
+
+      <!-- ==================================================
+           COLISIONES: PAREDES DEL BOL
+           ==================================================
+
+           Aproximamos las paredes mediante ocho cajas.
+
+           Las cajas están distribuidas cada 45 grados.
+
+           Dimensiones de cada pared:
+               Grosor radial:      0.006 m
+               Anchura tangencial: 0.060 m
+               Longitud inclinada: 0.055 m
+
+           Inclinación:
+               Pitch = 0.50 rad
+
+           El borde superior queda más alejado del
+           centro que la parte inferior, reproduciendo
+           aproximadamente la apertura del recipiente.
+
+           Los valores son aproximaciones geométricas
+           que validaremos visualmente en Gazebo.
+      -->
+
+      <!-- Pared 1: 0 grados -->
+
+      <collision name="bowl_wall_1">
+
+        <pose>0.047204 -0.043754 0.028 0 0.50 0</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 2: 45 grados -->
+
+      <collision name="bowl_wall_2">
+
+        <pose>0.029045 0.000087 0.028 0 0.50 0.785398</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 3: 90 grados -->
+
+      <collision name="bowl_wall_3">
+
+        <pose>-0.014796 0.018246 0.028 0 0.50 1.570796</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 4: 135 grados -->
+
+      <collision name="bowl_wall_4">
+
+        <pose>-0.058636 0.000087 0.028 0 0.50 2.356194</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 5: 180 grados -->
+
+      <collision name="bowl_wall_5">
+
+        <pose>-0.076796 -0.043754 0.028 0 0.50 3.141593</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 6: 225 grados -->
+
+      <collision name="bowl_wall_6">
+
+        <pose>-0.058636 -0.087594 0.028 0 0.50 3.926991</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 7: 270 grados -->
+
+      <collision name="bowl_wall_7">
+
+        <pose>-0.014796 -0.105754 0.028 0 0.50 4.712389</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+
+      <!-- Pared 8: 315 grados -->
+
+      <collision name="bowl_wall_8">
+
+        <pose>0.029045 -0.087594 0.028 0 0.50 5.497787</pose>
+
+        <geometry>
+          <box>
+            <size>0.006 0.060 0.055</size>
+          </box>
+        </geometry>
+
+      </collision>
+
+    </link>
+
+  </model>
+
+</sdf>

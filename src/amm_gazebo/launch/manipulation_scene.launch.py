@@ -77,9 +77,8 @@ def generate_launch_description():
     # Acercamos los objetos SOLO 4 cm hacia el MiR100
     # (dirección Y positiva), manteniendo X, Z y orientación.
     # Su visibilidad y la ejecución del pick deberán revalidarse.
-    spawn_botella = crear_spawn(
-        "water_bottle", modelos, (-0.36, -0.92, 0.70),
-        rotacion=(0.0, 1.5707963, 0.0),
+    spawn_mostaza = crear_spawn(
+        "ycb_mustard_bottle", modelos, (-0.36, -0.92, 0.70)
     )
     spawn_manzana = crear_spawn(
         "ycb_apple", modelos, (-0.12, -0.80, 0.70)
@@ -120,7 +119,7 @@ def generate_launch_description():
     # porque anteriormente no aparecía bien en Entity Tree.
     spawns = [
         spawn_mesa_central,
-        spawn_botella,
+        spawn_mostaza,
         spawn_manzana,
         spawn_taza,
         spawn_cuenco,

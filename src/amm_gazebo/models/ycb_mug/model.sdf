@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+  <!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR
+  ============================================================
+
+  Modelo: YCB Mug
+  Archivo: model.sdf
+
+  Descripción:
+      Taza utilizada para pruebas de percepción y manipulación
+      mediante YOLO Segmentation y MoveIt 2.
+
+  Modelo original:
+      YCB Object and Model Set - 025_mug
+
+  Fuente:
+      AI Habitat / YCB Dataset
+      Licencia: CC BY 4.0
+
+  ============================================================
+  -->
+
+  <model name="ycb_mug">
+
+    <!--
+    El objeto debe ser dinámico para permitir:
+      - Caída por gravedad.
+      - Colisiones con la mesa.
+      - Interacción con la pinza.
+      - Manipulación posterior mediante MoveIt 2.
+    -->
+    <static>false</static>
+
+    <link name="mug_link">
+
+      <!-- ==================================================
+           PROPIEDADES FÍSICAS
+           ================================================== -->
+
+      <inertial>
+        <pose>-0.02 0.0175 0 0 0 0</pose>
+        <!-- Masa real aproximada de la taza YCB: 118 gramos -->
+        <mass>0.118</mass>
+
+        <!--
+        Aproximación de la inercia mediante un cilindro macizo.
+
+        Radio: 0.04 m
+        Altura: 0.08 m
+
+        Valores provisionales para las primeras pruebas.
+        -->
+        <inertia>
+          <ixx>0.000110</ixx>
+          <iyy>0.000110</iyy>
+          <izz>0.0000944</izz>
+
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+
+      </inertial>
+
+
+      <!-- ==================================================
+           GEOMETRÍA VISUAL
+           ================================================== -->
+
+        <visual name="mug_visual">
+
+        <!--
+        Corregimos el desplazamiento vertical de la malla
+        respecto al origen del link.
+
+        Desplazamiento inicial: -2.5 cm.
+        -->
+        <pose>0 0 -0.035 0 0 0</pose>
+
+        <geometry>
+            <mesh>
+            <uri>model://ycb_mug/meshes/mug.glb</uri>
+            <scale>1 1 1</scale>
+            </mesh>
+        </geometry>
+
+        </visual>
+
+
+            <!-- ==================================================
+            VISUALIZACIÓN AUXILIAR DE LA COLISIÓN
+            ==================================================
+
+            Esta geometría es únicamente visual.
+            Permite comprobar la alineación del cilindro físico
+            con el cuerpo de la taza.
+
+            Debe eliminarse cuando terminemos el ajuste.
+        -->
+      <!--
+        <visual name="collision_debug_visual">
+
+     
+        <pose>-0.02 0.0175 0 0 0 0</pose>
+
+        <geometry>
+            <cylinder>
+            <radius>0.042</radius>
+            <length>0.08</length>
+            </cylinder>
+        </geometry>
+
+     
+        <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+        </material>
+
+        <transparency>0.6</transparency>
+
+        </visual>
+      -->
+
+      <!-- ==================================================
+           GEOMETRÍA DE COLISIÓN
+           ================================================== -->
+
+      <collision name="mug_collision">
+
+        <!--
+        Aproximamos inicialmente el cuerpo de la taza
+        mediante un cilindro.
+
+        Esta geometría no representa todavía el asa.
+        -->
+
+        <pose>-0.02 0.0175 0 0 0 0</pose>
+
+        <geometry>
+          <cylinder>
+            <radius>0.042</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+
+        <!-- Fricción entre la taza y otras superficies -->
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.9</mu>
+              <mu2>0.9</mu2>
+            </ode>
+          </friction>
+        </surface>
+
+      </collision>
+
+    </link>
+
+  </model>
+
+</sdf>

@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+  <!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR
+  ============================================================
+
+  Modelo: Industrial Workbench
+  Archivo: model.sdf
+
+  Descripción:
+      Mesa de trabajo industrial utilizada como estación
+      de manipulación de objetos.
+
+  Modelo visual:
+      TRADE 160 - Commercial Workbench
+      Fuente: Innerscene
+      Licencia: CC0
+
+  Dimensiones:
+      Longitud: 1.62 m
+      Anchura: 0.93 m
+      Altura: 0.91 m
+
+  ============================================================
+  -->
+
+  <model name="industrial_workbench">
+
+    <!--
+    La mesa permanece fija en el entorno.
+    No se verá afectada por la gravedad ni por las
+    fuerzas ejercidas por los objetos o el robot.
+    -->
+    <static>true</static>
+
+    <link name="workbench_link">
+
+      <!-- ==================================================
+           GEOMETRÍA VISUAL
+           ================================================== -->
+
+        <!-- ==================================================
+            GEOMETRÍA VISUAL
+            ================================================== -->
+
+        <visual name="workbench_visual">
+
+        <!--
+        Corregimos la orientación de la malla GLB.
+        Rotación de 90 grados alrededor del eje X.
+        -->
+        <pose>0 0 0 1.5707963 0 0</pose>
+
+        <geometry>
+            <mesh>
+            <uri>model://industrial_workbench/meshes/commercial-workbench.glb</uri>
+
+            <!--
+            Reducimos la altura al 85 %.
+            La malla parece utilizar Y como eje vertical original.
+            Conservamos las otras dos dimensiones.
+            -->
+            <scale>1 0.66 1</scale>
+
+            </mesh>
+        </geometry>
+
+        </visual>
+
+
+      <!-- ==================================================
+           GEOMETRÍA DE COLISIÓN
+           ================================================== -->
+
+      <collision name="tabletop_collision">
+
+        <!--
+        Aproximación inicial del tablero mediante una caja.
+
+        Altura superior aproximada: 0.91 m
+        Grosor estimado del tablero: 0.04 m
+
+        Centro vertical:
+            0.91 - 0.04/2 = 0.89 m
+
+        La alineación se comprobará en Gazebo.
+        -->
+
+        <pose>0 0 0.58 0 0 0</pose>
+
+        <geometry>
+        <box>
+            <size>1.62 0.93 0.04</size>
+        </box>
+        </geometry>
+
+        <surface>
+
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+
+        </surface>
+
+      </collision>
+
+    </link>
+
+  </model>
+
+</sdf>

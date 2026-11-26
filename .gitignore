@@ -31,3 +31,6 @@ Thumbs.db
 # Raw recordings
 recordings/
 raw_videos/
+
+# Editor backup files
+*.bak

@@ -1,0 +1,33 @@
+# ROS 2 / Colcon
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+.venv_yolo/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# ROS 2 recordings and logs
+*.bag
+*.db3
+*.mcap
+*.log
+
+# Raw recordings
+recordings/
+raw_videos/

@@ -62,15 +62,38 @@ https://creativecommons.org/publicdomain/zero/1.0/
 
 ## 3. Robot Descriptions
 
-The robotic platform integrates external descriptions of:
+The project integrates three third-party ROS 2 robot description packages.
 
-- MiR100 mobile robot.
-- Universal Robots UR5e manipulator.
-- Robotiq 2F-85 gripper.
+### MiR100 — `mir_description`
 
-These resources are maintained separately from the project's custom ROS 2 packages.
+- **Original project:** DFKI MiR Robot
+- **Original authors:** Martin Günther (DFKI GmbH) and contributors
+- **License:** BSD-3-Clause
+- **Source:** https://github.com/DFKI-NI/mir_robot
+- **License file:** `src/mir_description/LICENSE.txt`
 
-Their original licenses and redistribution requirements must be respected.
+### Universal Robots UR5e — `ur_description`
+
+- **Original project:** Universal Robots ROS 2 Description
+- **Original developer:** Universal Robots
+- **License:** BSD-3-Clause for applicable content
+- **Source:** https://github.com/UniversalRobots/Universal_Robots_ROS2_Description
+- **License file:** `src/ur_description/LICENSE`
+
+Some Universal Robots graphical assets are subject to additional terms.
+Those terms must be respected when redistributing the corresponding meshes.
+
+### Robotiq 2F-85 — `robotiq_description`
+
+- **Original project:** Robotiq ROS
+- **Original developer:** Robotiq and contributors
+- **License:** BSD-3-Clause
+- **Source:** https://github.com/robotiq/robotiq-ros
+- **License file:** `src/robotiq_description/LICENSE`
+
+These packages provide robot descriptions and supporting resources.
+
+The original copyright notices and license conditions are retained.
 
 ## 4. Attribution and Licensing
 

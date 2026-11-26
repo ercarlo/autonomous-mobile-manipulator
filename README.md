@@ -46,8 +46,9 @@ The project integrates four main subsystems:
 | Mission Coordination | ROS 2, Python, TF2 | High-level mission execution and subsystem synchronization |
 
 The complete workflow is organized as follows:
+The complete workflow is organized as follows:
 
-
+```mermaid
 flowchart TB
     CMD["Mission Command: apple,mesa1"] --> COORD["ROS 2 Task Coordinator"]
 
@@ -92,8 +93,7 @@ flowchart TB
     COORD -->|"Navigate and Return"| NAV2
     CTRL <--> ARM
     CTRL <--> BASE
-
-
+```
 ## Robotic Platform
 
 | Component | Model |

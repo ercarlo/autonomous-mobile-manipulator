@@ -1,0 +1,47 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR
+# CONFIGURACIÓN DE ESTACIONES DE DESTINO
+# ============================================================
+
+stations:
+
+  # ==========================================================
+  # MESA 1 - ESTACIÓN DE DESCARGA VALIDADA VISUALMENTE
+  # ==========================================================
+
+  mesa1:
+
+    enabled: true
+
+    # Posición que debe alcanzar el MiR100.
+    # Coordenadas obtenidas mediante AMCL en el marco map.
+    navigation_pose:
+
+      frame_id: map
+
+      position:
+        x: 4.294977
+        y: -4.4
+        z: 0.0
+
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685435
+        w: 0.728133
+
+    # Se configurará durante la etapa de place.
+    place_pose: null
+
+  # ==========================================================
+  # ESTACIONES FUTURAS
+  # ==========================================================
+
+  mesa2:
+    enabled: false
+
+  mesa3:
+    enabled: false
+
+  mesa4:
+    enabled: false

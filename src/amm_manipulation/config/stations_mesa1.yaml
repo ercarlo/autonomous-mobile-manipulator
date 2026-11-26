@@ -1,0 +1,33 @@
+# ============================================================
+# ESTACIONES DEL AUTONOMOUS MOBILE MANIPULATOR
+# ============================================================
+# Posiciones de navegación expresadas en el frame map.
+# Solo mesa1 tiene implementados y validados movimientos de place.
+# Las demás mesas quedan preparadas pero deshabilitadas.
+
+stations:
+  mesa1:
+    enabled: true
+    navigation_pose:
+      frame_id: map
+      position:
+        x: 4.294977
+        y: -4.400000  # Nueva distancia elegida frente a la mesa.
+        z: 0.0
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685435
+        w: 0.728133
+    place_states:
+      approach: place_approach_mesa1
+      drop: place_drop_mesa1
+
+  mesa2:
+    enabled: false
+
+  mesa3:
+    enabled: false
+
+  mesa4:
+    enabled: false

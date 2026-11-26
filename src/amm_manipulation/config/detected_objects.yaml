@@ -1,0 +1,47 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - OBJETOS DETECTADOS
+# ============================================================
+#
+# Configuración para representar objetos identificados por
+# YOLO como obstáculos en la Planning Scene de MoveIt 2.
+#
+# IMPORTANTE:
+#   - No contiene posiciones de los objetos.
+#   - Las posiciones se reciben desde los tópicos ROS 2.
+#   - Las dimensiones son aproximaciones iniciales.
+#   - Todavía no se estima la orientación de cada objeto.
+#
+# ============================================================
+
+# Referencia de planificación utilizada en nuestra escena.
+planning_frame: odom
+
+# Intervalo entre actualizaciones de la Planning Scene.
+update_period: 0.5
+
+# Desplazamiento mínimo para actualizar una caja.
+# Evita publicar continuamente pequeñas variaciones
+# producidas por el ruido de las estimaciones RGB-D.
+minimum_displacement: 0.03
+
+objects:
+
+  # Botella, aproximadamente tumbada.
+  bottle:
+    topic: /perception/bottle/point_base
+    dimensions: [0.26, 0.12, 0.12]
+
+  # Manzana.
+  apple:
+    topic: /perception/apple/point_base
+    dimensions: [0.095, 0.095, 0.095]
+
+  # Taza, incluyendo un margen para el asa.
+  cup:
+    topic: /perception/cup/point_base
+    dimensions: [0.13, 0.13, 0.12]
+
+  # Bol.
+  bowl:
+    topic: /perception/bowl/point_base
+    dimensions: [0.17, 0.17, 0.09]

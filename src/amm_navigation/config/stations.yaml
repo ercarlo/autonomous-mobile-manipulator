@@ -1,0 +1,45 @@
+
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - ESTACIONES
+# ============================================================
+#
+# Paquete: amm_navigation
+# Archivo: config/stations.yaml
+#
+# Objetivo:
+#   Definir posiciones de navegación preestablecidas
+#   dentro del almacén.
+#
+# Las estaciones están expresadas en el frame "map".
+#
+# Coordenadas:
+#   x, y -> posición en metros.
+#   yaw  -> orientación en radianes respecto al eje X.
+#
+# Estas poses corresponden a la BASE MÓVIL, no al objeto
+# que recogerá posteriormente el brazo UR5e.
+# ============================================================
+
+stations:
+
+  # ----------------------------------------------------------
+  # ESTACIÓN DE RECOGIDA
+  # ----------------------------------------------------------
+  recogida:
+    frame_id: map
+    x: -3.706
+    y: 0.023
+
+    # Orientación hacia el eje X positivo.
+    yaw: 0.0
+
+  # ----------------------------------------------------------
+  # ESTACIÓN DE ENTREGA
+  # ----------------------------------------------------------
+  entrega:
+    frame_id: map
+    x: 3.923
+    y: -0.068
+
+    # Orientación hacia el eje X negativo.
+    yaw: 3.141593

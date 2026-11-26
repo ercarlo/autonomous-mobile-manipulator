@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: amm_description
+    relative_path: urdf/mobile_manipulator.urdf.xacro
+  srdf:
+    relative_path: config/autonomous_mobile_manipulator.srdf
+  package_settings:
+    author_name: Carlo
+    author_email: Carlosquarciamateo@gmail.com
+    generated_timestamp: 1795436619

@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  PRUEBA INDEPENDIENTE DEL LIDAR - GAZEBO HARMONIC
+  ============================================================
+
+  Objetivo:
+    Comprobar si Gazebo puede generar medidas lidar correctas
+    sin utilizar el MiR100, URDF/Xacro ni ros_gz_bridge.
+
+  Escenario:
+    - Suelo horizontal.
+    - Pared a 3 metros del origen.
+    - Lidar independiente a 1 metro de altura.
+
+  Resultado esperado:
+    El lidar debe medir aproximadamente 2.8 metros
+    en la dirección frontal.
+
+  Esta prueba no modifica la simulación principal.
+-->
+
+<sdf version="1.10">
+
+  <world name="lidar_diagnostic_world">
+
+    <!-- ================================================ -->
+    <!-- 1. SISTEMAS DE GAZEBO -->
+    <!-- ================================================ -->
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics"/>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands"/>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster"/>
+
+    <!--
+      El plugin Sensors genera las medidas del lidar.
+      Utilizamos Ogre2 como motor de renderizado.
+    -->
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <background>0.8 0.8 0.8 1</background>
+    </scene>
+
+    <!-- ================================================ -->
+    <!-- 2. SUELO -->
+    <!-- ================================================ -->
+
+    <model name="ground">
+      <static>true</static>
+
+      <pose>0 0 -0.05 0 0 0</pose>
+
+      <link name="ground_link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>20 20 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20 20 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+    </model>
+
+    <!-- ================================================ -->
+    <!-- 3. PARED DE PRUEBA -->
+    <!-- ================================================ -->
+
+    <!--
+      Centro de la pared: x = 3 m.
+
+      Dimensiones:
+        0.4 m de grosor
+        4 m de anchura
+        2 m de altura
+
+      Su cara más cercana al lidar está en x = 2.8 m.
+    -->
+
+    <model name="test_wall">
+
+      <static>true</static>
+      <pose>3 0 1 0 0 0</pose>
+
+      <link name="wall_link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.4 4 2</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.4 4 2</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <!-- ================================================ -->
+    <!-- 4. LIDAR INDEPENDIENTE -->
+    <!-- ================================================ -->
+
+    <!--
+      Situamos el lidar en (0, 0, 1).
+
+      No añadimos geometría de colisión al sensor
+      para evitar posibles interferencias.
+
+      El eje X positivo apunta hacia la pared.
+    -->
+
+    <model name="test_lidar">
+
+      <static>true</static>
+      <pose>0 0 1 0 0 0</pose>
+
+      <link name="lidar_link">
+
+        <sensor name="simple_lidar" type="gpu_lidar">
+
+          <pose>0 0 0 0 0 0</pose>
+
+          <topic>/test_scan</topic>
+          <gz_frame_id>lidar_link</gz_frame_id>
+
+          <always_on>true</always_on>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+
+          <lidar>
+
+            <scan>
+
+              <!-- Barrido horizontal de 180 grados -->
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-1.5707963</min_angle>
+                <max_angle>1.5707963</max_angle>
+              </horizontal>
+
+              <!-- Una única capa horizontal -->
+              <vertical>
+                <samples>1</samples>
+                <resolution>1</resolution>
+                <min_angle>0</min_angle>
+                <max_angle>0</max_angle>
+              </vertical>
+
+            </scan>
+
+            <!-- Distancias permitidas por el sensor -->
+            <range>
+              <min>0.25</min>
+              <max>10.0</max>
+              <resolution>0.01</resolution>
+            </range>
+
+          </lidar>
+
+        </sensor>
+
+      </link>
+    </model>
+
+  </world>
+</sdf>

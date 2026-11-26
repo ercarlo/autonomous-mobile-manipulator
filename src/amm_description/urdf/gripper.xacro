@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - ROBOTIQ GRIPPER
+  ============================================================
+
+  Paquete: amm_description
+  Archivo: gripper.xacro
+
+  Descripción:
+    Integra la pinza industrial Robotiq 2F-85 mediante
+    los modelos y macros oficiales de Robotiq.
+
+  Componentes:
+    1. Adaptador mecánico UR -> Robotiq.
+    2. Cuerpo de la pinza Robotiq 2F-85.
+    3. Dedos y articulaciones del mecanismo.
+
+  En esta fase solo definimos la estructura cinemática.
+  El control físico se incorporará más adelante mediante
+  ros2_control y Gazebo Harmonic.
+
+  Los modelos originales no se modifican.
+  ============================================================
+-->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- ======================================================
+       1. IMPORTACIÓN DE MACROS OFICIALES
+       ======================================================
+
+       Importamos el adaptador industrial y el modelo
+       completo de la Robotiq 2F-85.
+
+       Estos archivos pertenecen al paquete externo
+       robotiq_description.
+  -->
+
+  <xacro:include
+    filename="$(find robotiq_description)/urdf/ur_to_robotiq_adapter.urdf.xacro"/>
+
+  <xacro:include
+    filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro"/>
+
+
+  <!-- ======================================================
+       2. MACRO PROPIA DE INTEGRACIÓN
+       ======================================================
+
+       Esta macro conecta el conjunto adaptador + pinza
+       con el extremo del brazo.
+
+       parent:
+         Link del brazo donde se monta la herramienta.
+
+       Así podremos reutilizar este módulo en otros
+       robots sin modificar los modelos originales.
+  -->
+
+  <xacro:macro name="amm_robotiq_gripper"
+             params="parent sim_gazebo:=false">
+
+    <!-- ====================================================
+         3. ADAPTADOR UR -> ROBOTIQ
+         ====================================================
+
+         Crea:
+           - gripper_ur_to_robotiq_link
+           - gripper_gripper_mount_link
+
+         El adaptador se conecta mediante un joint fijo
+         al link indicado en el parámetro parent.
+
+         Utilizamos el prefijo gripper_ para evitar
+         conflictos con otros componentes del robot.
+    -->
+
+    <xacro:ur_to_robotiq
+      prefix="gripper_"
+      parent="${parent}"
+      rotation="0.0"/>
+
+
+    <!-- ====================================================
+         4. PINZA INDUSTRIAL ROBOTIQ 2F-85
+         ====================================================
+
+         Conectamos la pinza al punto de montaje generado
+         por la macro anterior.
+
+         include_ros2_control=false:
+           No incluimos controladores todavía.
+
+         sim_gazebo=false:
+           No activamos configuraciones de simulación
+           específicas en esta fase de visualización.
+
+         origin:
+           La base de la pinza coincide con el punto
+           de montaje del adaptador.
+    -->
+
+    <xacro:robotiq_gripper
+      name="robotiq_2f85"
+      prefix="gripper_"
+      parent="gripper_gripper_mount_link"
+      include_ros2_control="${sim_gazebo}"
+      sim_gazebo="${sim_gazebo}">
+
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+    </xacro:robotiq_gripper>
+
+  </xacro:macro>
+
+</robot>

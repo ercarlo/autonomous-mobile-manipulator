@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - ROBOT DESCRIPTION
+  ============================================================
+
+  Paquete: amm_description
+  Archivo: mobile_manipulator.urdf.xacro
+
+  Descripción:
+    Modelo del robot móvil manipulador formado por:
+      - Base móvil MiR100.
+      - Brazo robótico Universal Robots UR5e.
+
+  Los modelos originales se importan desde sus paquetes
+  de descripción correspondientes.
+
+  Este archivo define la integración mecánica entre ambos
+  robots y los parámetros necesarios para generar el UR5e.
+  ============================================================
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="autonomous_mobile_manipulator">
+
+  <!-- ======================================================
+       1. DESCRIPCIONES DE LOS ROBOTS
+       ======================================================
+
+       Importamos:
+         - MiR100: chasis, ruedas, articulaciones y sensores.
+         - UR5e: macro que genera la estructura del brazo.
+
+       La macro ur_robot se ejecutará más adelante.
+  -->
+
+  <xacro:include
+    filename="$(find mir_description)/urdf/mir.urdf.xacro"/>
+
+  <xacro:include
+    filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+
+
+  <!-- ======================================================
+       2. PARÁMETROS DEL BRAZO UR5e
+       ======================================================
+
+       Estos archivos contienen los datos necesarios para
+       generar correctamente el modelo del manipulador.
+
+       joint_limits:
+         Límites de posición, velocidad y aceleración.
+
+       kinematics:
+         Parámetros geométricos del modelo cinemático.
+
+       physical:
+         Masas, centros de gravedad y propiedades físicas.
+
+       visual:
+         Parámetros de representación visual del brazo.
+
+       tf_prefix:
+         Prefijo para evitar conflictos entre los nombres
+         de los links y joints del MiR100 y del UR5e.
+  -->
+
+  <xacro:arg name="ur_type" default="ur5e"/>
+  <xacro:arg name="tf_prefix" default="ur5e_"/>
+
+  <xacro:arg
+    name="joint_limit_params"
+    default="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
+
+  <xacro:arg
+    name="kinematics_params"
+    default="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"/>
+
+  <xacro:arg
+    name="physical_params"
+    default="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"/>
+
+  <xacro:arg
+    name="visual_params"
+    default="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"/>
+    
+    <!--
+  Activa la integración de ros2_control con Gazebo.
+
+  Por defecto está desactivada para permitir visualizar
+  el robot en RViz sin iniciar componentes de simulación.
+-->
+  <xacro:arg name="sim_gazebo" default="false"/>
+
+
+  <!-- ======================================================
+       3. SOPORTE DE MONTAJE DEL UR5e
+       ======================================================
+
+       El MiR100 contiene un link llamado "surface",
+       que representa el punto de montaje superior.
+
+       Creamos un link intermedio para conectar el brazo
+       con la plataforma móvil.
+
+       La articulación es fija porque el soporte no
+       dispone de ningún grado de libertad.
+
+       origin xyz="0 0 0":
+         La base del soporte coincide con el frame surface.
+
+       Más adelante podremos modificar esta transformación
+       si necesitamos desplazar o girar el brazo.
+  -->
+
+  <link name="ur5e_mount_link"/>
+
+  <joint name="mir_to_ur5e_joint" type="fixed">
+
+    <parent link="surface"/>
+    <child link="ur5e_mount_link"/>
+
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+
+  </joint>
+
+
+  <!-- ======================================================
+       4. INSTANCIA DEL BRAZO UR5e
+       ======================================================
+
+       La macro ur_robot genera:
+         - Los seis joints del UR5e.
+         - Sus links y geometrías.
+         - Sus propiedades físicas.
+         - La cadena cinemática hasta tool0.
+
+       parent:
+         Conectamos el brazo con el soporte definido arriba.
+
+       tf_prefix:
+         Los nombres generados comenzarán por ur5e_.
+
+       origin:
+         El origen del brazo coincide con el soporte.
+
+       safety_limits=false:
+         No activamos los límites suaves adicionales
+         de seguridad en esta primera versión.
+         Se mantienen los límites articulares del modelo.
+  -->
+
+  <xacro:ur_robot
+    name="ur5e"
+    tf_prefix="$(arg tf_prefix)"
+    parent="ur5e_mount_link"
+    joint_limits_parameters_file="$(arg joint_limit_params)"
+    kinematics_parameters_file="$(arg kinematics_params)"
+    physical_parameters_file="$(arg physical_params)"
+    visual_parameters_file="$(arg visual_params)"
+    safety_limits="false"
+    safety_pos_margin="0.15"
+    safety_k_position="20"
+    force_abs_paths="false">
+
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+
+  </xacro:ur_robot>
+
+
+
+  <!-- ======================================================
+       5. INTEGRACIÓN DE LA PINZA ROBOTIQ 2F-85
+       ======================================================
+
+       Importamos nuestra macro de integración.
+
+       Esta macro incorpora:
+         - El adaptador mecánico UR -> Robotiq.
+         - La pinza industrial Robotiq 2F-85.
+         - Los dedos y sus articulaciones.
+
+       La herramienta se conecta al frame ur5e_tool0.
+
+       La posición final del conjunto queda definida por
+       las transformaciones del adaptador y la pinza.
+  -->
+
+  <xacro:include
+    filename="$(find amm_description)/urdf/gripper.xacro"/>
+
+  <xacro:amm_robotiq_gripper
+    parent="ur5e_tool0"
+    sim_gazebo="$(arg sim_gazebo)"/>
+
+
+
+  <!-- ======================================================
+       6. CÁMARA RGB-D DE MUÑECA
+       ======================================================
+
+       Incorporamos una RealSense D435 al extremo del UR5e.
+
+       La cámara comparte el frame de montaje del brazo
+       con el adaptador Robotiq.
+
+       Sus transformaciones cambiarán automáticamente
+       cuando se muevan las articulaciones del UR5e.
+
+       Se utilizará posteriormente para:
+         - Detección de objetos mediante YOLO.
+         - Estimación de posiciones 3D.
+         - Transformaciones TF2.
+         - Planificación de agarres con MoveIt 2.
+  -->
+
+  <xacro:include
+    filename="$(find amm_description)/urdf/wrist_camera.xacro"/>
+
+  <xacro:amm_wrist_camera parent="ur5e_tool0"/>
+
+  
+  <!-- ======================================================
+       7. INTERFACES ROS2_CONTROL DEL UR5e
+       ======================================================
+
+       Importamos nuestra configuración de control.
+
+       Esta macro no modifica la geometría del robot:
+       añade las interfaces que utilizará gz_ros2_control
+       para controlar las articulaciones en Gazebo.
+
+       La configuración de la pinza y de los controladores
+       se incorporará en los siguientes pasos.
+  -->
+
+  <xacro:include
+    filename="$(find amm_control)/urdf/ros2_control.xacro"/>
+
+  <xacro:amm_arm_ros2_control/>
+
+    <!--
+    Inicializamos el plugin de control únicamente cuando
+    el robot vaya a ejecutarse en Gazebo Harmonic.
+
+    El parámetro sim_gazebo permite reutilizar el mismo
+    modelo tanto para RViz como para simulación.
+  -->
+  <xacro:if value="$(arg sim_gazebo)">
+    <xacro:amm_gazebo_control_plugin/>
+  </xacro:if>
+
+
+
+  <!-- ======================================================
+       CONTROL DIFERENCIAL DE LA BASE MIr100
+       ======================================================
+
+       Importamos el plugin DiffDrive desarrollado en
+       nuestro paquete amm_description.
+
+       Solo lo activamos durante la simulación en Gazebo.
+
+       En RViz no es necesario cargar este plugin,
+       porque allí únicamente visualizamos el robot.
+  -->
+
+  <xacro:include
+    filename="$(find amm_description)/urdf/base_drive.xacro"/>
+
+  <xacro:if value="$(arg sim_gazebo)">
+    <xacro:amm_base_diff_drive/>
+  </xacro:if>
+
+
+</robot>

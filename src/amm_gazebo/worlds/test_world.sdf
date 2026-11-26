@@ -1,0 +1,243 @@
+
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - TEST WORLD
+  ============================================================
+
+  Paquete: amm_gazebo
+  Archivo: test_world.sdf
+
+  Objetivo:
+    Crear un entorno sencillo para validar la simulación
+    y posteriormente comprobar los sensores del robot.
+
+  Elementos:
+    - Suelo plano.
+    - Iluminación.
+    - Un obstáculo cúbico estático.
+    - Sistemas de física y sensores de Gazebo Harmonic.
+
+  El robot MiR100 + UR5e se insertará posteriormente.
+  ============================================================
+-->
+
+<sdf version="1.9">
+
+  <world name="amm_test_world">
+
+    <!-- ====================================================
+         1. CONFIGURACIÓN FÍSICA
+         ====================================================
+
+         max_step_size:
+           Intervalo de integración de la simulación.
+
+         real_time_factor:
+           Relación objetivo entre tiempo simulado
+           y tiempo real. No garantiza alcanzar 1.0.
+
+         gravity:
+           Aceleración gravitatoria en m/s².
+    -->
+
+    <physics name="default_physics" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <gravity>0 0 -9.81</gravity>
+
+
+    <!-- ====================================================
+         2. SISTEMAS DE GAZEBO
+         ====================================================
+
+         Physics:
+           Simula la dinámica de los cuerpos.
+
+         UserCommands:
+           Permite insertar, mover y eliminar modelos.
+
+         SceneBroadcaster:
+           Comunica el estado del escenario a la GUI.
+
+         Sensors:
+           Actualiza los sensores de imagen y lidar.
+
+         Imu:
+           Procesa los sensores inerciales.
+
+         La comunicación de Gazebo con ROS 2 se
+         configurará posteriormente con ros_gz_bridge.
+    -->
+
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+
+    <plugin filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <plugin filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu"/>
+
+
+    <!-- ====================================================
+         3. ASPECTO VISUAL DEL MUNDO
+         ====================================================
+
+         Configuramos la iluminación ambiental,
+         el color de fondo y las sombras.
+    -->
+
+    <scene>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.8 0.85 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+
+    <!-- ====================================================
+         4. ILUMINACIÓN PRINCIPAL
+         ====================================================
+
+         Luz direccional situada sobre el escenario.
+
+         No representa una lámpara física concreta:
+         sirve para iluminar los objetos simulados.
+    -->
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+
+      <pose>0 0 10 0 0 0</pose>
+
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+
+      <direction>-0.3 -0.4 -1</direction>
+    </light>
+
+
+    <!-- ====================================================
+         5. SUELO
+         ====================================================
+
+         Modelo estático de 12 x 12 metros.
+
+         La superficie superior se encuentra en Z = 0,
+         porque el centro del suelo está en Z = -0.05
+         y su grosor es de 0.10 metros.
+
+         Visual y collision tienen la misma geometría
+         para que el robot pueda apoyarse correctamente.
+    -->
+
+    <model name="ground_plane">
+
+      <static>true</static>
+
+      <pose>0 0 -0.05 0 0 0</pose>
+
+      <link name="ground_link">
+
+        <collision name="ground_collision">
+          <geometry>
+            <box>
+              <size>12 12 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="ground_visual">
+          <geometry>
+            <box>
+              <size>12 12 0.1</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.6 0.65 0.6 1</ambient>
+            <diffuse>0.6 0.65 0.6 1</diffuse>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+
+    <!-- ====================================================
+         6. OBSTÁCULO DE PRUEBAS
+         ====================================================
+
+         Caja estática situada en:
+           X = 2.0 m
+           Y = 0.0 m
+           Z = 0.5 m
+
+         Dimensiones:
+           0.60 x 0.60 x 1.00 metros.
+
+         La base del obstáculo está en Z = 0.
+
+         Al ser estático no se desplazará cuando el
+         robot entre en contacto con él.
+
+         Este obstáculo permitirá comprobar:
+           - Detección con lidar.
+           - Distancias medidas por cámaras RGB-D.
+           - Representación en RViz.
+           - Evitación de obstáculos con Nav2.
+    -->
+
+    <model name="test_obstacle">
+
+      <static>true</static>
+
+      <pose>2.0 0.0 0.5 0 0 0</pose>
+
+      <link name="obstacle_link">
+
+        <collision name="obstacle_collision">
+          <geometry>
+            <box>
+              <size>0.6 0.6 1.0</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="obstacle_visual">
+          <geometry>
+            <box>
+              <size>0.6 0.6 1.0</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.75 0.35 0.15 1</ambient>
+            <diffuse>0.75 0.35 0.15 1</diffuse>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+  </world>
+
+</sdf>

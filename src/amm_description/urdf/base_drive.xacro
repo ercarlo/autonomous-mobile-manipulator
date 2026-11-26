@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - MIr100 DIFFERENTIAL DRIVE
+  ============================================================
+
+  Paquete: amm_description
+  Archivo: base_drive.xacro
+
+  Objetivo:
+    Incorporar el sistema de tracción diferencial del
+    MiR100 en Gazebo Harmonic.
+
+  El plugin recibe comandos de velocidad y calcula
+  las velocidades de las ruedas motrices.
+
+  Utilizamos los nombres y dimensiones obtenidos
+  directamente del URDF original del MiR100.
+
+  Este módulo solo se utilizará en Gazebo.
+  ============================================================
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ======================================================
+       1. MACRO DE TRACCIÓN DIFERENCIAL
+       ======================================================
+
+       Definimos el plugin dentro de una macro para
+       poder activarlo desde la descripción principal
+       únicamente cuando ejecutemos Gazebo.
+
+       No modificamos los joints originales del MiR100.
+  -->
+
+  <xacro:macro name="amm_base_diff_drive">
+
+    <gazebo>
+
+      <plugin
+        filename="gz-sim-diff-drive-system"
+        name="gz::sim::systems::DiffDrive">
+
+        <!-- ================================================
+             2. ARTICULACIONES MOTRICES
+             ================================================
+
+             Estas articulaciones están definidas en
+             mir_description/urdf/mir.urdf.xacro.
+        -->
+
+        <left_joint>left_wheel_joint</left_joint>
+        <right_joint>right_wheel_joint</right_joint>
+
+        <!-- ================================================
+             3. PARÁMETROS GEOMÉTRICOS
+             ================================================
+
+             Separación:
+               0.222604 - (-0.222604) = 0.445208 m.
+
+             Radio:
+               0.0625 m según la geometría de las ruedas.
+
+             Estos valores determinan la conversión
+             entre velocidades del robot y las ruedas.
+        -->
+
+        <wheel_separation>0.445208</wheel_separation>
+        <wheel_radius>0.0625</wheel_radius>
+
+        <!-- ================================================
+             4. COMANDOS DE VELOCIDAD
+             ================================================
+
+             Gazebo escuchará en /cmd_vel.
+
+             Recibirá mensajes gz.msgs.Twist con:
+               linear.x  -> velocidad de avance (m/s).
+               angular.z -> velocidad de giro (rad/s).
+
+             Más adelante conectaremos este topic
+             con ROS 2 mediante ros_gz_bridge.
+        -->
+
+        <topic>/cmd_vel</topic>
+
+        <!-- ================================================
+             5. ODOMETRÍA
+             ================================================
+
+             El plugin estima el desplazamiento de la base
+             utilizando el movimiento de sus ruedas.
+
+             Publicamos la odometría en /odom dentro
+             del transporte de Gazebo.
+
+             El frame odom será el marco de referencia
+             local de la base móvil.
+        -->
+
+        <odom_topic>/odom</odom_topic>
+        <odom_publish_frequency>30</odom_publish_frequency>
+
+        <frame_id>odom</frame_id>
+        <child_frame_id>base_footprint</child_frame_id>
+
+        <!-- ================================================
+             6. LÍMITES PROVISIONALES DE VELOCIDAD
+             ================================================
+
+             Utilizamos velocidades reducidas para
+             las primeras pruebas de movimiento.
+
+             Estos valores no representan los límites
+             nominales del MiR100 real.
+
+             Posteriormente los ajustaremos según
+             la dinámica y los requisitos del proyecto.
+        -->
+
+        <max_linear_velocity>0.2</max_linear_velocity>
+        <min_linear_velocity>-0.2</min_linear_velocity>
+
+        <max_angular_velocity>0.5</max_angular_velocity>
+        <min_angular_velocity>-0.5</min_angular_velocity>
+
+      </plugin>
+
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

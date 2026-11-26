@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - WRIST CAMERA
+  ============================================================
+
+  Paquete: amm_description
+  Archivo: wrist_camera.xacro
+
+  Descripción:
+    Integración de una cámara RGB-D RealSense D435
+    en el extremo del brazo UR5e.
+
+  Objetivos:
+    - Detectar objetos situados delante de la pinza.
+    - Obtener imágenes RGB y datos de profundidad.
+    - Conocer la posición de la cámara mediante TF2.
+    - Facilitar futuras operaciones de pick & place.
+
+  Se reutiliza la descripción del sensor incluida
+  en mir_description, sin duplicar su geometría.
+  ============================================================
+-->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- ======================================================
+       1. IMPORTACIÓN DEL MODELO REALSENSE D435
+       ======================================================
+
+       La macro original incluye:
+         - Geometría simplificada del sensor.
+         - Propiedades físicas e inerciales.
+         - Frames de referencia.
+         - Sensor RGB-D compatible con Gazebo Harmonic.
+  -->
+
+  <xacro:include
+    filename="$(find mir_description)/urdf/sensors/realsense_d435.xacro"/>
+
+
+  <!-- ======================================================
+       2. MACRO PROPIA DE INTEGRACIÓN
+       ======================================================
+
+       parent:
+         Link del robot donde se instalará la cámara.
+
+       Al utilizar una macro propia, podremos modificar
+       su montaje sin alterar el modelo original.
+  -->
+
+  <xacro:macro name="amm_wrist_camera" params="parent">
+
+    <!-- ====================================================
+         3. MONTAJE DE LA CÁMARA
+         ====================================================
+
+         prefix:
+           Prefijo único para los links y joints.
+
+         parent:
+           Frame del UR5e al que se conecta el sensor.
+
+         topic:
+           Nombre base de las publicaciones de Gazebo.
+
+         xyz:
+           Posición de la cámara respecto al parent,
+           expresada en metros.
+
+         rpy:
+           Orientación respecto al parent, en radianes.
+
+         Los valores iniciales se toman como referencia
+         del montaje del proyecto original.
+
+         La posición y orientación se verificarán en RViz
+         y se ajustarán si interfieren con la Robotiq.
+    -->
+
+    <xacro:realsense_d435
+      prefix="wrist_camera"
+      parent="${parent}"
+      topic="wrist_camera"
+      xyz="-0.06 0.0 -0.06"
+      rpy="0.0 -1.5708 0.0"/>
+
+  </xacro:macro>
+
+</robot>
+

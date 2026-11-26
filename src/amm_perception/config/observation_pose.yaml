@@ -1,0 +1,29 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR
+# POSICIÓN DE OBSERVACIÓN RGB-D
+# ============================================================
+#
+# Objetivo:
+#   Configuración articular del UR5e desde la que la cámara
+#   RealSense D435 puede observar los cuatro objetos YCB
+#   situados sobre la mesa industrial.
+#
+# Esta configuración se obtuvo utilizando MoveIt 2.
+#
+# Los valores están expresados en radianes.
+#
+# ============================================================
+
+observation_pose:
+
+  ur5e_shoulder_pan_joint: -1.7492898908976224
+
+  ur5e_shoulder_lift_joint: -1.1423490229504831
+
+  ur5e_elbow_joint: 0.24986693519604908
+
+  ur5e_wrist_1_joint: -0.96391910901171
+
+  ur5e_wrist_2_joint: -1.6064835527489736
+
+  ur5e_wrist_3_joint: 1.4279462844500532

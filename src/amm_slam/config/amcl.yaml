@@ -1,0 +1,161 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - AMCL
+# ============================================================
+#
+# Paquete: amm_slam
+# Archivo: amcl.yaml
+#
+# Objetivo:
+#   Localizar el MiR100 sobre el mapa guardado del almacén.
+#
+# Entradas principales:
+#   - Mapa de ocupación: /map
+#   - Medidas del lidar: /scan
+#   - Odometría mediante TF.
+#
+# Salidas principales:
+#   - Estimación de posición: /amcl_pose
+#   - Transformación TF: map -> odom
+#
+# ============================================================
+
+amcl:
+  ros__parameters:
+
+    # ========================================================
+    # 1. TIEMPO DE SIMULACIÓN
+    # ========================================================
+
+    use_sim_time: true
+
+    # ========================================================
+    # 2. REFERENCIAS Y TOPICS
+    # ========================================================
+    #
+    # Utilizamos las mismas referencias que en SLAM Toolbox.
+    #
+    # AMCL publicará map -> odom.
+    # Gazebo continuará proporcionando odom -> base_footprint.
+
+    global_frame_id: map
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+
+    scan_topic: /scan
+
+    tf_broadcast: true
+    transform_tolerance: 1.0
+
+    # ========================================================
+    # 3. MODELO DE MOVIMIENTO
+    # ========================================================
+    #
+    # El MiR100 utiliza tracción diferencial.
+    #
+    # Los parámetros alpha representan incertidumbres
+    # asociadas a la odometría.
+    #
+    # Partimos de los valores habituales de AMCL
+    # y los ajustaremos según las pruebas.
+
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+
+    # ========================================================
+    # 4. FILTRO DE PARTÍCULAS
+    # ========================================================
+    #
+    # Cada partícula representa una hipótesis de la pose
+    # del robot dentro del almacén.
+    #
+    # AMCL adapta el número de partículas dentro
+    # de los límites establecidos.
+    #
+    # Usamos una cantidad moderada para empezar
+    # sin sobrecargar nuestra máquina virtual.
+
+    min_particles: 300
+    max_particles: 1500
+
+    pf_err: 0.05
+    pf_z: 0.99
+
+    resample_interval: 1
+
+    # ========================================================
+    # 5. MODELO DEL SENSOR LIDAR
+    # ========================================================
+    #
+    # likelihood_field:
+    #   Compara las medidas del lidar con la distancia
+    #   a los obstáculos del mapa.
+    #
+    # max_beams:
+    #   Número máximo de rayos utilizados para evaluar
+    #   las hipótesis de localización.
+    #
+    # No es necesario procesar los 720 rayos para
+    # obtener una primera estimación de la pose.
+
+    laser_model_type: "likelihood_field"
+
+    max_beams: 60
+
+    z_hit: 0.5
+    z_rand: 0.5
+
+    sigma_hit: 0.2
+    laser_likelihood_max_dist: 2.0
+
+    do_beamskip: false
+
+    # ========================================================
+    # 6. ACTUALIZACIÓN DE LA LOCALIZACIÓN
+    # ========================================================
+    #
+    # AMCL actualiza el filtro cuando el robot se desplaza
+    # o gira lo suficiente.
+    #
+    # Distancia: 0.10 m.
+    # Giro: 0.10 rad, aproximadamente 5.7 grados.
+
+    update_min_d: 0.10
+    update_min_a: 0.10
+
+    # ========================================================
+    # 7. INICIALIZACIÓN DE LA POSE
+    # ========================================================
+    #
+    # Inicialmente indicaremos la posición del robot
+    # manualmente desde RViz con "2D Pose Estimate".
+    #
+    # Esto facilita comprender cómo inicializa AMCL
+    # su distribución de partículas.
+    #
+    # No imponemos una pose inicial desde el YAML.
+
+    # ========================================================
+    # INICIALIZACIÓN AUTOMÁTICA DE AMCL
+    # ========================================================
+
+    # Utilizar una pose inicial configurada sin necesidad
+    # de establecerla manualmente desde RViz.
+    set_initial_pose: true
+
+    # Conservar la última estimación conocida cuando AMCL
+    # se reactive, en lugar de exigir una nueva inicialización.
+    always_reset_initial_pose: false
+
+    # Pose inicial del MiR100 en el marco map.
+    # Válida si el robot comienza en el origen y el
+    # mapa está alineado con esa posición.
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0

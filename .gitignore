@@ -34,3 +34,6 @@ raw_videos/
 
 # Editor backup files
 *.bak
+
+# Backup files
+*.bak*

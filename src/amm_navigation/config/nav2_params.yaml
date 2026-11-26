@@ -1,0 +1,464 @@
+
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - NAV2
+# ============================================================
+#
+# Paquete: amm_navigation
+# Archivo: config/nav2_params.yaml
+#
+# Objetivo:
+#   Configurar los costmaps de navegación del MiR100.
+#
+# Arquitectura:
+#   - Global Costmap: mapa del almacén + obstáculos.
+#   - Local Costmap: obstáculos próximos detectados por lidar.
+#
+# Este archivo se ampliará posteriormente con:
+#   - Planner Server
+#   - Controller Server
+#   - Behavior Server
+#   - BT Navigator
+#
+# ============================================================
+
+
+# ============================================================
+# 1. GLOBAL COSTMAP
+# ============================================================
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+
+      # Gazebo publica el reloj de simulación.
+      use_sim_time: true
+
+      # Frames de referencia.
+      global_frame: map
+      robot_base_frame: base_footprint
+
+      # Frecuencias de actualización y publicación (Hz).
+      update_frequency: 1.0
+      publish_frequency: 1.0
+
+      # Resolución espacial: 5 cm por celda.
+      resolution: 0.05
+
+      # Conservamos las zonas desconocidas del mapa.
+      track_unknown_space: true
+
+      # Margen adicional aplicado al footprint (metros).
+      footprint_padding: 0.03
+
+      # Geometría rectangular del MiR100.
+      # Tiene en cuenta el desplazamiento X del chasis.
+      footprint: "[[0.512646, 0.325], [0.512646, -0.325], [-0.437354, -0.325], [-0.437354, 0.325]]"
+
+      # Capas del costmap, procesadas en este orden.
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+
+      # ------------------------------------------------------
+      # Capa estática: mapa generado en la fase 3.
+      # ------------------------------------------------------
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        enabled: true
+        map_topic: /map
+        map_subscribe_transient_local: true
+
+      # ------------------------------------------------------
+      # Capa de obstáculos: lecturas del lidar frontal.
+      # ------------------------------------------------------
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+
+        observation_sources: scan
+
+        scan:
+          topic: /scan
+          data_type: "LaserScan"
+
+          marking: true
+          clearing: true
+
+          # Distancia máxima para marcar obstáculos (m).
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.0
+
+          # Distancia máxima para liberar espacio mediante rayos.
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+
+          min_obstacle_height: 0.0
+          max_obstacle_height: 2.0
+
+      # ------------------------------------------------------
+      # Inflación: aumenta el coste cerca de los obstáculos.
+      # ------------------------------------------------------
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+
+        inflation_radius: 0.65
+        cost_scaling_factor: 3.0
+
+      always_send_full_costmap: true
+
+
+# ============================================================
+# 2. LOCAL COSTMAP
+# ============================================================
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+
+      use_sim_time: true
+
+      # El mapa local utiliza la odometría, no el frame map.
+      global_frame: odom
+      robot_base_frame: base_footprint
+
+      # El mapa local se actualiza más rápidamente.
+      update_frequency: 5.0
+      publish_frequency: 2.0
+
+      resolution: 0.05
+
+      # Ventana móvil centrada en el robot.
+      rolling_window: true
+      width: 5
+      height: 5
+
+      # Misma geometría utilizada por el costmap global.
+      footprint_padding: 0.03
+      footprint: "[[0.512646, 0.325], [0.512646, -0.325], [-0.437354, -0.325], [-0.437354, 0.325]]"
+
+      # El mapa local utiliza el lidar y la inflación.
+      plugins: ["obstacle_layer", "inflation_layer"]
+
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+
+        observation_sources: scan
+
+        scan:
+          topic: /scan
+          data_type: "LaserScan"
+
+          marking: true
+          clearing: true
+
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+
+          min_obstacle_height: 0.0
+          max_obstacle_height: 2.0
+
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+
+        inflation_radius: 0.65
+        cost_scaling_factor: 3.0
+
+      always_send_full_costmap: true
+
+
+# ============================================================
+# 3. PLANNER SERVER
+# ============================================================
+#
+# Objetivo:
+#   Calcular una ruta global desde la posición actual
+#   del robot hasta el objetivo solicitado.
+#
+# El planner utiliza el Global Costmap configurado
+# anteriormente y proporciona la acción ComputePathToPose.
+#
+# ============================================================
+
+planner_server:
+  ros__parameters:
+
+    # Utilizamos el tiempo de simulación de Gazebo.
+    use_sim_time: true
+
+    # Frecuencia esperada de planificación (Hz).
+    # No implica que se recalculen rutas continuamente.
+    expected_planner_frequency: 1.0
+
+    # Identificador de nuestro plugin de planificación.
+    planner_plugins: ["GridBased"]
+
+    GridBased:
+
+      # Algoritmo de Nav2 basado en una cuadrícula.
+      plugin: "nav2_navfn_planner::NavfnPlanner"
+
+      # Utilizamos A* en lugar de Dijkstra.
+      use_astar: true
+
+      # No permitimos planificar atravesando zonas desconocidas.
+      allow_unknown: false
+
+      # Tolerancia de posición del objetivo en metros.
+      tolerance: 0.25
+
+
+
+# ============================================================
+# 4. CONTROLLER SERVER
+# ============================================================
+#
+# Objetivo:
+#   Seguir una trayectoria calculada por el Planner Server
+#   y generar comandos de velocidad para el MiR100.
+#
+# Controlador:
+#   Regulated Pure Pursuit (Nav2).
+#
+# Durante las primeras pruebas empleamos velocidades
+# conservadoras y comprobación de colisiones.
+# ============================================================
+
+controller_server:
+  ros__parameters:
+
+    # Reloj de Gazebo.
+    use_sim_time: true
+
+    # Frecuencia de cálculo de comandos de velocidad (Hz).
+    controller_frequency: 10.0
+
+    # Odometría utilizada para estimar el movimiento.
+    odom_topic: /odom
+
+    # En ROS 2 Jazzy usamos Twist sin cabecera.
+    # Debe coincidir con la interfaz de /cmd_vel.
+    enable_stamped_cmd_vel: false
+
+    # Filtrado de pequeñas velocidades en odometría.
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.001
+    min_theta_velocity_threshold: 0.001
+
+    # Plugins responsables de seguimiento y validación.
+    controller_plugins: ["FollowPath"]
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["goal_checker"]
+
+    # --------------------------------------------------------
+    # PROGRESS CHECKER
+    # --------------------------------------------------------
+    # Detecta si el robot permanece bloqueado y no avanza.
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+
+      # Debe desplazarse al menos 15 cm en 15 segundos.
+      required_movement_radius: 0.15
+      movement_time_allowance: 15.0
+
+    # --------------------------------------------------------
+    # GOAL CHECKER
+    # --------------------------------------------------------
+    # Determina cuándo se considera alcanzado el destino.
+
+    goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+
+      # Tolerancia de posición: 15 cm.
+      xy_goal_tolerance: 0.15
+
+      # Tolerancia de orientación: aproximadamente 11,5°.
+      yaw_goal_tolerance: 0.20
+
+      stateful: true
+
+    # --------------------------------------------------------
+    # REGULATED PURE PURSUIT
+    # --------------------------------------------------------
+
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+
+      # Velocidad lineal nominal (m/s).
+      # Valor conservador para las primeras pruebas.
+      desired_linear_vel: 0.20
+
+      # Distancia de anticipación del seguimiento (m).
+      lookahead_dist: 0.50
+
+      # Límites para un futuro seguimiento adaptativo.
+      min_lookahead_dist: 0.30
+      max_lookahead_dist: 0.70
+      lookahead_time: 1.5
+
+      # Inicialmente utilizamos distancia fija.
+      use_velocity_scaled_lookahead_dist: false
+
+      # Ajustes de transformación TF.
+      transform_tolerance: 0.2
+
+      # Reducción de velocidad al aproximarse al destino.
+      min_approach_linear_velocity: 0.05
+      approach_velocity_scaling_dist: 0.60
+
+      # Comprobación anticipada de posibles colisiones.
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+
+      # Regulación de velocidad en curvas.
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 0.90
+      regulated_linear_scaling_min_speed: 0.10
+
+      # Dejamos desactivada inicialmente la regulación
+      # adicional basada en costes del costmap.
+      use_cost_regulated_linear_velocity_scaling: false
+
+      # Rotación en el sitio cuando sea necesaria.
+      use_rotate_to_heading: true
+      rotate_to_heading_angular_vel: 0.60
+      rotate_to_heading_min_angle: 0.785
+
+      # Aceleración angular para las rotaciones.
+      max_angular_accel: 1.0
+
+      # El robot no seguirá rutas marcha atrás.
+      allow_reversing: false
+
+
+
+# ============================================================
+# 5. BEHAVIOR SERVER
+# ============================================================
+#
+# Objetivo:
+#   Proporcionar comportamientos de recuperación cuando
+#   el robot encuentra dificultades durante la navegación.
+#
+# Comportamientos configurados:
+#   - spin: giro sobre sí mismo.
+#   - backup: retroceso controlado.
+#   - wait: espera temporal.
+#
+# Estos comportamientos serán coordinados posteriormente
+# por el BT Navigator.
+# ============================================================
+
+behavior_server:
+  ros__parameters:
+
+    # Utilizamos el reloj de simulación de Gazebo.
+    use_sim_time: true
+
+    # Costmaps y footprints utilizados para comprobar
+    # la seguridad de las maniobras.
+    local_costmap_topic: /local_costmap/costmap_raw
+    local_footprint_topic: /local_costmap/published_footprint
+
+    global_costmap_topic: /global_costmap/costmap_raw
+    global_footprint_topic: /global_costmap/published_footprint
+
+    # Frecuencia de ejecución de los comportamientos.
+    cycle_frequency: 10.0
+
+    # Sistemas de referencia de nuestro MiR100.
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_footprint
+
+    transform_tolerance: 0.2
+
+    # Nuestra interfaz de velocidades utiliza Twist,
+    # no TwistStamped, en ROS 2 Jazzy.
+    enable_stamped_cmd_vel: false
+
+    # Plugins de comportamiento habilitados.
+    behavior_plugins: ["spin", "backup", "wait"]
+
+    # --------------------------------------------------------
+    # GIRO SOBRE SÍ MISMO
+    # --------------------------------------------------------
+    spin:
+      plugin: "nav2_behaviors::Spin"
+
+    # --------------------------------------------------------
+    # RETROCESO CONTROLADO
+    # --------------------------------------------------------
+    backup:
+      plugin: "nav2_behaviors::BackUp"
+
+    # --------------------------------------------------------
+    # ESPERA
+    # --------------------------------------------------------
+    wait:
+      plugin: "nav2_behaviors::Wait"
+
+    # Parámetros generales de comprobación y giro.
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 0.6
+    min_rotational_vel: 0.2
+    rotational_acc_lim: 1.0
+
+
+
+# ============================================================
+# 6. BT NAVIGATOR
+# ============================================================
+#
+# Objetivo:
+#   Coordinar la navegación autónoma mediante un
+#   árbol de comportamiento (Behavior Tree).
+#
+# El navegador solicita acciones a:
+#   - Planner Server: cálculo de trayectorias.
+#   - Controller Server: seguimiento de trayectorias.
+#   - Behavior Server: maniobras de recuperación.
+#
+# Inicialmente utilizamos el árbol estándar de Nav2 Jazzy.
+# Más adelante podremos desarrollar nuestro propio XML.
+# ============================================================
+
+bt_navigator:
+  ros__parameters:
+
+    # Reloj de simulación de Gazebo.
+    use_sim_time: true
+
+    # Sistemas de referencia de nuestro MiR100.
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+
+    # Tolerancia temporal para las transformaciones TF.
+    transform_tolerance: 0.2
+
+    # Periodo de ejecución del Behavior Tree (ms).
+    bt_loop_duration: 10
+
+    # Tiempo de espera predeterminado para las respuestas
+    # de los servidores utilizados por el árbol (ms).
+    default_server_timeout: 20
+
+    # Inicialmente habilitamos navegación a un único destino.
+    navigators: ["navigate_to_pose"]
+
+    navigate_to_pose:
+
+      # Plugin encargado de implementar NavigateToPose.
+      plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
+
+      # No utilizamos todavía monitorización con Groot.
+      enable_groot_monitoring: false
+
+    # No añadimos bibliotecas BT personalizadas.
+    # Los plugins estándar se cargan automáticamente.
+    

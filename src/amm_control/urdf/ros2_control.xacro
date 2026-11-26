@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+
+<!--
+  ============================================================
+  AUTONOMOUS MOBILE MANIPULATOR - ROS2 CONTROL
+  ============================================================
+
+  Paquete: amm_control
+  Archivo: ros2_control.xacro
+
+  Objetivo:
+    Definir las interfaces de control del brazo UR5e
+    para su utilización en Gazebo Harmonic.
+
+  En esta primera versión:
+    - Configuramos únicamente las seis articulaciones.
+    - Utilizamos comandos de posición.
+    - Leemos posición y velocidad de cada articulación.
+
+  Todavía no configuramos:
+    - Controladores de trayectoria.
+    - Control de la pinza Robotiq.
+    - Control de la base móvil.
+
+  El plugin Gazebo que inicializa controller_manager
+  se añadirá después de validar estas interfaces.
+  ============================================================
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ======================================================
+       1. MACRO DE CONTROL DEL BRAZO
+       ======================================================
+
+       Definimos una macro para poder incluir estas
+       interfaces desde la descripción principal.
+
+       La macro no crea links ni joints mecánicos nuevos:
+       únicamente declara cómo controlar los existentes.
+  -->
+
+  <xacro:macro name="amm_arm_ros2_control">
+
+    <!-- ====================================================
+         2. INTERFAZ DE HARDWARE SIMULADO
+         ====================================================
+
+         name:
+           Identificador del sistema de hardware.
+
+         type="system":
+           Agrupa varias articulaciones dentro de
+           una misma interfaz de hardware.
+
+         GazeboSimSystem:
+           Plugin que conecta ros2_control con
+           las articulaciones físicas de Gazebo.
+    -->
+
+    <ros2_control name="AMMArmSystem" type="system">
+
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+
+
+      <!-- ==================================================
+           3. ARTICULACIONES DEL UR5e
+           ==================================================
+
+           Cada articulación dispone de:
+
+           command_interface position:
+             Recibe la posición objetivo en radianes.
+
+           state_interface position:
+             Permite leer su posición actual.
+
+           state_interface velocity:
+             Permite leer su velocidad angular.
+
+           Los nombres deben coincidir exactamente
+           con los joints generados por ur_description.
+      -->
+
+      <!-- Articulación 1: rotación de la base -->
+      <joint name="ur5e_shoulder_pan_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Articulación 2: movimiento del hombro -->
+      <joint name="ur5e_shoulder_lift_joint">
+        <command_interface name="position">
+          <param name="initial_value">-1.5708</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">-1.5708</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Articulación 3: movimiento del codo -->
+      <joint name="ur5e_elbow_joint">
+        <command_interface name="position">
+          <param name="initial_value">1.5708</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">1.5708</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Articulación 4: primera articulación de muñeca -->
+      <joint name="ur5e_wrist_1_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Articulación 5: segunda articulación de muñeca -->
+      <joint name="ur5e_wrist_2_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Articulación 6: tercera articulación de muñeca -->
+      <joint name="ur5e_wrist_3_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+    </ros2_control>
+
+  </xacro:macro>
+
+  <!-- ======================================================
+       7. INTERFACES ROS2_CONTROL DEL UR5e
+       ======================================================
+
+       Importamos nuestra configuración de control.
+
+       Esta macro no modifica la geometría del robot:
+       añade las interfaces que utilizará gz_ros2_control
+       para controlar las articulaciones en Gazebo.
+
+       La configuración de la pinza y de los controladores
+       se incorporará en los siguientes pasos.
+  -->
+
+
+
+
+
+
+  <!-- ======================================================
+       4. PLUGIN GAZEBO ROS2_CONTROL
+       ======================================================
+
+       Este plugin conecta Gazebo Harmonic con ros2_control.
+
+       Cuando Gazebo carga nuestro robot:
+         1. Inicializa el sistema de control.
+         2. Crea el nodo controller_manager.
+         3. Lee la configuración controllers.yaml.
+         4. Permite cargar y activar los controladores.
+
+       Importante:
+         Este bloque debe incluirse una sola vez en el
+         robot completo, aunque existan varios sistemas
+         de hardware.
+
+       La pinza Robotiq se integrará posteriormente
+       dentro del mismo sistema de control.
+  -->
+
+  <xacro:macro name="amm_gazebo_control_plugin">
+
+    <gazebo>
+      <plugin
+        filename="gz_ros2_control-system"
+        name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+
+        <!-- Archivo YAML con los controladores del robot -->
+        <parameters>
+          $(find amm_control)/config/controllers.yaml
+        </parameters>
+
+        <!-- Ganancia proporcional del control de posición.
+             Es un valor inicial que ajustaremos mediante
+             pruebas de movimiento en Gazebo. -->
+        <position_proportional_gain>0.5</position_proportional_gain>
+
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+
+</robot>

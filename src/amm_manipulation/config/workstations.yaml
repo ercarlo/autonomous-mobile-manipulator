@@ -1,0 +1,41 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - ESTACIONES DE TRABAJO
+# ============================================================
+#
+# Define los obstáculos estáticos conocidos por el sistema.
+#
+# IMPORTANTE:
+#   - No contiene posiciones de objetos manipulables.
+#   - No utiliza coordenadas obtenidas directamente de Gazebo.
+#   - Las posiciones de las estaciones son información conocida.
+#   - Las posiciones de los objetos llegarán desde percepción.
+#
+# Referencia provisional:
+#   odom, con el robot inicialmente situado en el origen.
+#
+# En la integración definitiva utilizaremos una referencia
+# global apropiada, normalmente map.
+#
+# Unidades:
+#   Posiciones y dimensiones en metros.
+#
+# ============================================================
+
+frame_id: odom
+
+obstacles:
+
+  # ----------------------------------------------------------
+  # MESA INDUSTRIAL
+  # ----------------------------------------------------------
+
+  - id: amm_workbench_top
+
+    # Representación simplificada mediante una caja.
+    geometry: box
+
+    # Centro de la geometría de colisión.
+    position: [0.0, -0.90, 0.58]
+
+    # Longitud, anchura y grosor.
+    dimensions: [1.62, 0.93, 0.04]

@@ -1,0 +1,73 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - MOVEITPY
+# ============================================================
+#
+# Configuración del planificador Python.
+#
+# Robot: UR5e
+# Framework: MoveIt 2
+# Planificador: OMPL
+#
+# ============================================================
+
+
+# ------------------------------------------------------------
+# Monitorización del estado del robot
+# ------------------------------------------------------------
+
+planning_scene_monitor_options:
+
+  name: "planning_scene_monitor"
+
+  robot_description: "robot_description"
+
+  # Obtener las posiciones articulares de ros2_control.
+
+  joint_state_topic: "/joint_states"
+
+  # Interfaces del monitor de escena.
+
+  attached_collision_object_topic: "/moveit_cpp/planning_scene_monitor"
+
+  publish_planning_scene_topic: "/moveit_cpp/publish_planning_scene"
+
+  monitored_planning_scene_topic: "/moveit_cpp/monitored_planning_scene"
+
+  # Tiempo máximo para obtener el primer estado articular.
+
+  wait_for_initial_state_timeout: 10.0
+
+
+# ------------------------------------------------------------
+# Planificadores disponibles
+# ------------------------------------------------------------
+
+planning_pipelines:
+
+  pipeline_names:
+    - "ompl"
+
+
+# ------------------------------------------------------------
+# Parámetros de planificación
+# ------------------------------------------------------------
+
+plan_request_params:
+
+  # Número de intentos de planificación.
+
+  planning_attempts: 1
+
+  # Planificador seleccionado.
+
+  planning_pipeline: "ompl"
+
+  # Tiempo máximo de planificación en segundos.
+
+  planning_time: 5.0
+
+  # Límites conservadores para las primeras pruebas.
+
+  max_velocity_scaling_factor: 0.2
+
+  max_acceleration_scaling_factor: 0.2

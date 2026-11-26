@@ -1,0 +1,205 @@
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - SLAM TOOLBOX
+# ============================================================
+#
+# Paquete: amm_slam
+# Archivo: slam_toolbox.yaml
+#
+# Objetivo:
+#   Configurar SLAM Toolbox para construir un mapa 2D
+#   del entorno utilizando:
+#
+#   - Lidar SICK LMS100: /scan
+#   - Odometría del MiR100: TF odom -> base_footprint
+#   - Transformaciones del robot publicadas mediante TF2.
+#
+# Utilizamos SLAM asíncrono para no necesitar procesar
+# cada medición del lidar antes de recibir la siguiente.
+#
+# ============================================================
+
+slam_toolbox:
+  ros__parameters:
+
+    # ========================================================
+    # 1. TIEMPO DE SIMULACIÓN
+    # ========================================================
+    #
+    # Todos los nodos que trabajen con datos de Gazebo
+    # deben utilizar el mismo reloj de simulación.
+
+    use_sim_time: true
+
+    # ========================================================
+    # 2. SISTEMAS DE REFERENCIA
+    # ========================================================
+    #
+    # SLAM Toolbox utilizará la siguiente cadena TF:
+    #
+    # map -> odom -> base_footprint -> base_link
+    #                                      |
+    #                                      -> front_laser_link
+    #
+    # map:
+    #   Referencia global del mapa construido.
+    #
+    # odom:
+    #   Referencia local proporcionada por la odometría.
+    #
+    # base_footprint:
+    #   Referencia de la base móvil proyectada sobre el suelo.
+    #
+    # SLAM Toolbox calculará y publicará map -> odom.
+    # La transformación odom -> base_footprint ya existe.
+
+    map_frame: map
+    odom_frame: odom
+    base_frame: base_footprint
+
+    # ========================================================
+    # 3. SENSOR LIDAR
+    # ========================================================
+    #
+    # El SICK LMS100 publica medidas de tipo LaserScan.
+    #
+    # Sus características verificadas son:
+    #   - Campo de visión: 180 grados.
+    #   - Distancia mínima: 0.25 m.
+    #   - Distancia máxima: 30 m.
+    #
+    # Limitamos el rango utilizado para construir el mapa
+    # a 20 metros. Esto es suficiente inicialmente para
+    # nuestro escenario y puede ajustarse posteriormente.
+
+    scan_topic: /scan
+
+    min_laser_range: 0.25
+    max_laser_range: 20.0
+
+    # ========================================================
+    # 4. MODO DE FUNCIONAMIENTO
+    # ========================================================
+    #
+    # mapping:
+    #   Construye y actualiza un mapa mientras el robot
+    #   explora el entorno.
+    #
+    # Más adelante utilizaremos AMCL para localizar el
+    # robot sobre un mapa previamente guardado.
+
+    mode: mapping
+
+    # ========================================================
+    # 5. CONFIGURACIÓN DEL MAPA
+    # ========================================================
+    #
+    # resolution:
+    #   Tamaño de cada celda del mapa de ocupación.
+    #   0.05 metros equivale a 5 cm por celda.
+    #
+    # map_update_interval:
+    #   Intervalo de actualización del mapa publicado.
+    #   Utilizamos 5 segundos inicialmente para reducir
+    #   la carga de procesamiento en VMware.
+
+    resolution: 0.05
+    map_update_interval: 5.0
+
+    use_map_saver: true
+
+    # ========================================================
+    # 6. PROCESAMIENTO DE MEDICIONES
+    # ========================================================
+    #
+    # throttle_scans:
+    #   Factor de reducción de scans, utilizado por
+    #   SLAM Toolbox según su modalidad de procesamiento.
+    #
+    # scan_queue_size:
+    #   En modo asíncrono mantenemos una cola pequeña
+    #   para evitar acumular mediciones antiguas.
+    #
+    # minimum_travel_distance:
+    #   Desplazamiento mínimo para añadir nuevas medidas
+    #   relevantes al proceso de mapeo.
+    #
+    # minimum_travel_heading:
+    #   Giro mínimo, expresado en radianes.
+    #
+    # Con 0.15 rad exigimos aproximadamente 8.6 grados.
+
+    throttle_scans: 1
+    scan_queue_size: 1
+
+    minimum_travel_distance: 0.15
+    minimum_travel_heading: 0.15
+
+    # ========================================================
+    # 7. TRANSFORMACIONES TF
+    # ========================================================
+    #
+    # transform_publish_period:
+    #   Periodo de publicación de map -> odom.
+    #
+    # transform_timeout:
+    #   Margen temporal empleado para las transformaciones.
+    #
+    # tf_buffer_duration:
+    #   Duración del historial de transformaciones TF.
+
+    transform_publish_period: 0.05
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.0
+
+    # ========================================================
+    # 8. SCAN MATCHING
+    # ========================================================
+    #
+    # El scan matching compara mediciones consecutivas
+    # del lidar para estimar cómo se ha desplazado el robot.
+    #
+    # Complementa la odometría y permite reducir errores
+    # acumulados en la estimación de movimiento.
+
+    use_scan_matching: true
+    use_scan_barycenter: true
+
+    # ========================================================
+    # 9. CIERRE DE BUCLES
+    # ========================================================
+    #
+    # Cuando el robot vuelve a una zona ya visitada,
+    # SLAM Toolbox puede detectar esa coincidencia.
+    #
+    # El cierre de bucles permite corregir errores
+    # acumulados en la trayectoria y mejorar el mapa.
+
+    do_loop_closing: true
+
+    # ========================================================
+    # 10. OPTIMIZACIÓN DEL MAPA
+    # ========================================================
+    #
+    # Utilizamos Ceres Solver para optimizar el grafo
+    # de poses generado durante el proceso SLAM.
+    #
+    # Mantenemos una configuración de optimización
+    # estándar como punto de partida.
+
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # ========================================================
+    # 11. DIAGNÓSTICO
+    # ========================================================
+    #
+    # Desactivamos los mensajes de depuración detallados
+    # durante la ejecución normal.
+    #
+    # Podremos activarlos si aparecen errores.
+
+    debug_logging: false

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>amm_slam</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="carlo@todo.todo">carlo</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <!-- ====================================================== -->
+  <!-- DEPENDENCIAS DE EJECUCIÓN DEL PAQUETE AMM_SLAM           -->
+  <!-- ====================================================== -->
+
+  <!--
+    SLAM Toolbox:
+    Implementa el algoritmo de SLAM 2D para generar mapas
+    de ocupación utilizando el lidar y la odometría.
+  -->
+  <exec_depend>slam_toolbox</exec_depend>
+
+  <!--
+    Sistema de lanzamiento de ROS 2:
+    Permite ejecutar archivos launch escritos en Python.
+  -->
+  <exec_depend>launch</exec_depend>
+
+  <!--
+    Extensiones de lanzamiento para nodos ROS 2:
+    Proporciona acciones como Node.
+  -->
+  <exec_depend>launch_ros</exec_depend>
+
+  <!--
+    Permite localizar las rutas instaladas de los paquetes
+    sin utilizar rutas absolutas.
+  -->
+  <exec_depend>ament_index_python</exec_depend>
+  <!-- Servidor para cargar mapas de ocupación guardados. -->
+  <exec_depend>nav2_map_server</exec_depend>
+
+  <!-- Localización mediante filtro de partículas AMCL. -->
+  <exec_depend>nav2_amcl</exec_depend>
+
+  <!-- Gestión automática del ciclo de vida de los nodos. -->
+<exec_depend>nav2_lifecycle_manager</exec_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

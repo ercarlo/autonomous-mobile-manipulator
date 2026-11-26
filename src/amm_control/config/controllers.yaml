@@ -1,0 +1,109 @@
+
+# ============================================================
+# AUTONOMOUS MOBILE MANIPULATOR - CONTROLLERS
+# ============================================================
+#
+# Configuración de controladores del robot.
+#
+# Sistemas:
+#   - UR5e: seis articulaciones.
+#   - Robotiq 2F-85: una articulación principal.
+#
+# Todos los controladores están administrados por
+# el mismo controller_manager de Gazebo.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# 1. CONTROLLER MANAGER
+# ------------------------------------------------------------
+
+controller_manager:
+  ros__parameters:
+
+    # Frecuencia objetivo del ciclo de control: 100 Hz.
+    update_rate: 100
+
+    # Publica los estados articulares en /joint_states.
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # Ejecuta trayectorias de las seis articulaciones UR5e.
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    # Controla la apertura y el cierre de la Robotiq.
+    gripper_controller:
+      type: parallel_gripper_action_controller/GripperActionController
+
+
+# ------------------------------------------------------------
+# 2. CONTROLADOR DE TRAYECTORIAS DEL UR5e
+# ------------------------------------------------------------
+
+joint_trajectory_controller:
+  ros__parameters:
+
+    # Articulaciones que controla el UR5e.
+    joints:
+      - ur5e_shoulder_pan_joint
+      - ur5e_shoulder_lift_joint
+      - ur5e_elbow_joint
+      - ur5e_wrist_1_joint
+      - ur5e_wrist_2_joint
+      - ur5e_wrist_3_joint
+
+    # Comandos de posición.
+    command_interfaces:
+      - position
+
+    # Estados leídos desde Gazebo.
+    state_interfaces:
+      - position
+      - velocity
+
+    # Se exige especificar las seis articulaciones.
+    allow_partial_joints_goal: false
+
+    # Frecuencia de supervisión de acciones.
+    action_monitor_rate: 20.0
+
+
+# ------------------------------------------------------------
+# 3. CONTROLADOR DE LA ROBOTIQ 2F-85
+# ------------------------------------------------------------
+#
+# La Robotiq tiene una articulación principal.
+# El resto de articulaciones están acopladas mediante
+# relaciones mimic definidas en su URDF.
+#
+# Utilizamos el controlador estándar de pinzas paralelas
+# disponible en ROS 2 Jazzy.
+#
+# Inicialmente controlaremos solo la posición. No
+# habilitamos interfaces de comando adicionales para
+# esfuerzo o velocidad, porque nuestro hardware simulado
+# no las declara.
+# ------------------------------------------------------------
+
+gripper_controller:
+  ros__parameters:
+
+    # Articulación principal de apertura/cierre.
+    joint: gripper_robotiq_85_left_knuckle_joint
+
+    # Estados disponibles en el hardware de la pinza.
+    state_interfaces:
+      - position
+      - velocity
+
+    # Tolerancia inicial del objetivo articular.
+    goal_tolerance: 0.02
+
+    # No damos por completada una orden únicamente
+    # porque la pinza se haya detenido antes de llegar
+    # al objetivo.
+    allow_stalling: false
+
+    # Frecuencia de supervisión de acciones.
+    action_monitor_rate: 20.0

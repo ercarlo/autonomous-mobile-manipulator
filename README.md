@@ -47,38 +47,52 @@ The project integrates four main subsystems:
 
 The complete workflow is organized as follows:
 
-```text
-             HIGH-LEVEL TASK
-            "apple, mesa1"
-                   |
-                   v
-             TASK COORDINATOR
-                   |
-                   v
-          RGB-D OBJECT PERCEPTION
-                   |
-            YOLO SEGMENTATION
-                   |
-          3D POSITION ESTIMATION
-                   |
-                   v
-            MOVEIT 2 - PICK
-                   |
-          OBJECT ATTACHMENT
-                   |
-                   v
-          NAV2 - NAVIGATION
-                   |
-          DESTINATION STATION
-                   |
-                   v
-            MOVEIT 2 - PLACE
-                   |
-           OBJECT DETACHMENT
-                   |
-                   v
-          RETURN TO HOME POSE
-```
+
+flowchart TB
+    CMD["Mission Command: apple,mesa1"] --> COORD["ROS 2 Task Coordinator"]
+
+    subgraph PER["PERCEPTION"]
+        CAM["RealSense D435 RGB-D"]
+        YOLO["YOLO11s Instance Segmentation"]
+        DEPTH["Depth Processing"]
+        TF["3D Position Estimation + TF2"]
+        CAM --> YOLO
+        CAM --> DEPTH
+        YOLO --> TF
+        DEPTH --> TF
+    end
+
+    subgraph MAN["MANIPULATION"]
+        SCENE["MoveIt 2 Planning Scene"]
+        MOVEIT["MoveIt 2 Motion Planning"]
+        ARM["UR5e + Robotiq 2F-85"]
+        SCENE --> MOVEIT
+        MOVEIT --> ARM
+    end
+
+    subgraph NAV["MOBILE NAVIGATION"]
+        MAP["SLAM Toolbox / Warehouse Map"]
+        AMCL["AMCL Localization"]
+        NAV2["Nav2: Planning + Control"]
+        BASE["MiR100 Mobile Base"]
+        MAP --> AMCL
+        AMCL --> NAV2
+        NAV2 --> BASE
+    end
+
+    subgraph SIM["SIMULATION AND CONTROL"]
+        GAZ["Gazebo Harmonic"]
+        CTRL["ros2_control + Gazebo Controllers"]
+        GAZ <--> CTRL
+    end
+
+    COORD -->|"Detect target"| YOLO
+    TF -->|"Object pose"| MOVEIT
+    COORD -->|"Pick and Place"| MOVEIT
+    COORD -->|"Navigate and Return"| NAV2
+    CTRL <--> ARM
+    CTRL <--> BASE
+
 
 ## Robotic Platform
 
